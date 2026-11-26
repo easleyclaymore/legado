@@ -1,0 +1,95 @@
+name: Arm64 Only Build
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set-ver.outputs.version }}
+      versionL: ${{ steps.set-ver.outputs.versionL }}
+    steps:
+      - id: set-ver
+        run: |
+          version="3.$(TZ=Asia/Shanghai date +%y%m%d%H)"
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "versionL=$version" >> $GITHUB_OUTPUT
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      VERSIONL: ${{ needs.prepare.outputs.versionL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6.4.0
+
+      - name: Prepare Assets
+        run: |
+          echo "清空 18PlusList.txt"
+          echo "" > $GITHUB_WORKSPACE/app/src/main/assets/18PlusList.txt
+
+      - name: Release APK Sign
+        run: |
+          echo "设置签名文件"
+          echo "给apk增加签名"
+          cp $GITHUB_WORKSPACE/.github/workflows/legado.jks $GITHUB_WORKSPACE/app/legado.jks
+          sed '$a\RELEASE_STORE_FILE=./legado.jks' $GITHUB_WORKSPACE/gradle.properties -i
+          sed '$a\RELEASE_KEY_ALIAS=legado' $GITHUB_WORKSPACE/gradle.properties -i
+          sed '$a\RELEASE_STORE_PASSWORD=gedoor_legado' $GITHUB_WORKSPACE/gradle.properties -i
+          sed '$a\RELEASE_KEY_PASSWORD=gedoor_legado' $GITHUB_WORKSPACE/gradle.properties -i
+
+      - name: Build Arm64 Only APK
+        run: |
+          set -o pipefail
+          echo "当前版本号: $VERSION"
+          sed -i "s/^def version = .*/def version = \"$VERSION\"/" "$GITHUB_WORKSPACE/app/build.gradle"
+          chmod +x gradlew
+          echo "开始构建 arm64-v8a 专属 APK"
+          ./gradlew :app:assembleRelease -Parm64Only=true --build-cache --parallel --daemon --warning-mode all \
+            2>&1 | tee "$RUNNER_TEMP/gradle-build.log"
+
+      - name: Collect APK
+        run: |
+          mkdir -p ${{ github.workspace }}/apk/
+          bash $GITHUB_WORKSPACE/.github/scripts/collect-apks.sh \
+            $GITHUB_WORKSPACE/app/build/outputs/apk \
+            $GITHUB_WORKSPACE/apk \
+            app \
+            ${{ env.VERSIONL }} \
+            "arm64专属" \
+            arm
+
+      - name: Verify APK ABI
+        run: |
+          apk=$(find ${{ github.workspace }}/apk -maxdepth 1 -type f -name '*.apk' | head -1)
+          abis=$(unzip -Z1 "$apk" | sed -n 's#^lib/\([^/]*\)/.*#\1#p' | sort -u | paste -sd ' ' -)
+          echo "包含的ABI: $abis"
+          if [[ "$abis" != "arm64-v8a" ]]; then
+            echo "期望仅包含 arm64-v8a，实际: $abis"
+            exit 1
+          fi
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: legado.app.arm64
+          if-no-files-found: ignore
+          path: ${{ github.workspace }}/apk/*.apk
