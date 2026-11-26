@@ -13,8 +13,8 @@
         android:title="@string/discovery" />
     <item
         android:id="@+id/menu_rss"
-        android:icon="@drawable/ic_bottom_rss_feed"
-        android:title="@string/rss" />
+        android:icon="@drawable/ic_bottom_folder"
+        android:title="@string/local_folder" />
     <item
         android:id="@+id/menu_my_config"
         android:icon="@drawable/ic_bottom_person"

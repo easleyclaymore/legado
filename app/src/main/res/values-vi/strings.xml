@@ -49,6 +49,7 @@
     <string name="favorite">Yêu thích</string>
     <string name="in_favorites">Đã yêu thích</string>
     <string name="out_favorites">Chưa yêu thích</string>
+    <string name="local_folder">Cục bộ</string>
     <string name="rss">Nguồn cấp RSS</string>
     <string name="all">Tất cả</string>
     <string name="recent_reading">Đọc gần đây</string>

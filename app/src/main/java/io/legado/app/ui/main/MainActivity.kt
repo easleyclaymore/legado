@@ -56,8 +56,8 @@ import io.legado.app.ui.main.bookshelf.BaseBookshelfFragment
 import io.legado.app.ui.main.bookshelf.style1.BookshelfFragment1
 import io.legado.app.ui.main.bookshelf.style2.BookshelfFragment2
 import io.legado.app.ui.main.explore.ExploreFragment
+import io.legado.app.ui.main.local.LocalFolderFragment
 import io.legado.app.ui.main.my.MyFragment
-import io.legado.app.ui.main.rss.RssFragment
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.ui.widget.text.BadgeView
 import io.legado.app.utils.clearClip
@@ -95,7 +95,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
     private val idBookshelf1 = 11
     private val idBookshelf2 = 12
     private val idExplore = 1
-    private val idRss = 2
+    private val idRss = 2 //本地文件夹
     private val idMy = 3
     private var exitTime: Long = 0
     private var bookshelfReselected: Long = 0
@@ -486,20 +486,18 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
     private fun upBottomMenu() {
         val showDiscovery = AppConfig.showDiscovery
-        val showRss = AppConfig.showRSS
         binding.bottomNavigationView.menu.let { menu ->
             menu.findItem(R.id.menu_discovery).isVisible = showDiscovery
-            menu.findItem(R.id.menu_rss).isVisible = showRss
+            //第3栏固定为本地文件夹,始终显示
+            menu.findItem(R.id.menu_rss).isVisible = true
         }
         var index = 0
         if (showDiscovery) {
             index++
             realPositions[index] = idExplore
         }
-        if (showRss) {
-            index++
-            realPositions[index] = idRss
-        }
+        index++
+        realPositions[index] = idRss
         index++
         realPositions[index] = idMy
         bottomMenuCount = index + 1
@@ -613,9 +611,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 binding.viewPagerMain.setCurrentItem(realPositions.indexOf(idExplore), false)
             }
 
-            "rss" -> if (AppConfig.showRSS) {
-                binding.viewPagerMain.setCurrentItem(realPositions.indexOf(idRss), false)
-            }
+            "rss" -> binding.viewPagerMain.setCurrentItem(realPositions.indexOf(idRss), false)
 
             "my" -> binding.viewPagerMain.setCurrentItem(realPositions.indexOf(idMy), false)
         }
@@ -653,7 +649,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             if ((fragmentId == idBookshelf1 && any is BookshelfFragment1)
                 || (fragmentId == idBookshelf2 && any is BookshelfFragment2)
                 || (fragmentId == idExplore && any is ExploreFragment)
-                || (fragmentId == idRss && any is RssFragment)
+                || (fragmentId == idRss && any is LocalFolderFragment)
                 || (fragmentId == idMy && any is MyFragment)
             ) {
                 return POSITION_UNCHANGED
@@ -666,7 +662,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 idBookshelf1 -> BookshelfFragment1(position)
                 idBookshelf2 -> BookshelfFragment2(position)
                 idExplore -> ExploreFragment(position)
-                idRss -> RssFragment(position)
+                idRss -> LocalFolderFragment(position)
                 else -> MyFragment(position)
             }
         }

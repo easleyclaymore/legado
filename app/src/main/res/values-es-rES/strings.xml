@@ -50,6 +50,7 @@
     <string name="favorite">Favorito</string>
     <string name="in_favorites">en Favoritos</string>
     <string name="out_favorites">No está en Favoritos</string>
+    <string name="local_folder">Local</string>
     <string name="rss">Suscripción</string>
     <string name="all">Todo</string>
     <string name="recent_reading">Lecturas recientes</string>
