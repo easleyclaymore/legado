@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.FileProvider
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.R
@@ -45,6 +46,8 @@ class LocalFolderFragment() : VMBaseFragment<LocalFolderViewModel>(
     }
 
     override val position: Int? get() = arguments?.getInt("position")
+
+    override val viewModel by viewModels<LocalFolderViewModel>()
 
     private val binding by viewBinding(FragmentLocalFolderBinding::bind)
 
